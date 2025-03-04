@@ -8,9 +8,18 @@
 import UIKit
 import SnapKit
 
+protocol openNote {
+    func openNote(note: String, documentId: String)
+}
+
 class NotesCollectionViewCell: UICollectionViewCell {
     
     //MARK: Properties
+    var delegate: openNote?
+    var note: String = ""
+    var documentId: String = ""
+    
+    //MARK: UI Elements
     let stackView : UIStackView = {
         let stackview = UIStackView()
         stackview.axis = .vertical
@@ -20,7 +29,7 @@ class NotesCollectionViewCell: UICollectionViewCell {
     
     let dateLabel : UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 20)
+        label.font = .systemFont(ofSize: 17)
         label.textColor = UIColor(named: "LightGray")
         label.text = "20 Oct, 2025"
         return label
@@ -28,7 +37,7 @@ class NotesCollectionViewCell: UICollectionViewCell {
     
     let titleLabel : UILabel = {
         let label = UILabel()
-        label.font = .boldSystemFont(ofSize: 30)
+        label.font = .boldSystemFont(ofSize: 25)
         label.textColor = .white
         label.text = "Design Smart Home"
         return label
@@ -36,17 +45,21 @@ class NotesCollectionViewCell: UICollectionViewCell {
     
     let noteLabel : UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 20)
+        label.font = .systemFont(ofSize: 17)
         label.textColor = UIColor(named: "LightGray")
         return label
     }()
     
     let button: UIButton = {
         let button = UIButton()
-        button.setImage(UIImage(systemName: "arrow.up.right"), for: .normal)
+        button.setImage(UIImage(systemName: "arrow.up.right"),
+                        for: .normal)
         button.tintColor = .white
         button.backgroundColor = UIColor(named: "DarkGray3")
         button.layer.cornerRadius = 25
+        button.addTarget(self,
+                         action: #selector(openNote(_:)),
+                         for: .touchUpInside)
         return button
     }()
     
@@ -90,5 +103,11 @@ class NotesCollectionViewCell: UICollectionViewCell {
             make.top.trailing.equalToSuperview().inset(20)
             make.width.height.equalTo(50)
         }
+    }
+    
+    //MARK: Actions
+    @objc func openNote(_ sender: UIButton){
+        delegate?.openNote(note: note,
+                           documentId: documentId)
     }
 }

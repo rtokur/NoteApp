@@ -20,7 +20,7 @@ protocol AnyView {
     func updateNotes(with error: String)
 }
 
-class UserNotesViewController: UIViewController, AnyView {
+class UserNotesViewController: UIViewController, AnyView, openNote{
     
     //MARK: Properties
     var presenter: (any AnyPresenter)?
@@ -97,17 +97,11 @@ class UserNotesViewController: UIViewController, AnyView {
     private let collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .horizontal
-        layout.itemSize = CGSize(width: 90, height: 60)
-        let collection = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        let collection = UICollectionView(frame: .zero,
+                                          collectionViewLayout: layout)
         collection.showsHorizontalScrollIndicator = false
         collection.backgroundColor = .clear
         return collection
-    }()
-    
-    private let stackView3: UIStackView = {
-        let stackview = UIStackView()
-        stackview.axis = .horizontal
-        return stackview
     }()
     
     private let label: UILabel = {
@@ -117,20 +111,12 @@ class UserNotesViewController: UIViewController, AnyView {
         return label
     }()
     
-    private let seeMoreButton : UIButton = {
-        let button = UIButton()
-        button.setTitle("See More", for: .normal)
-        button.setTitleColor(.white, for: .normal)
-        button.titleEdgeInsets.left = 120
-        button.backgroundColor = .clear
-        return button
-    }()
-    
     private let notesCollectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .vertical
         let collection = UICollectionView(frame: .zero,
                                           collectionViewLayout: layout)
+        collection.showsVerticalScrollIndicator = false
         collection.backgroundColor = .clear
         return collection
     }()
@@ -207,6 +193,20 @@ class UserNotesViewController: UIViewController, AnyView {
         calendarButton.layer.cornerRadius = (calendarButton.frame.size.width ) / 2
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        homeButton.backgroundColor = UIColor(named: "Orange")
+        homeButton.setImage(UIImage(named: "house")?.withTintColor(.white),
+                            for: .normal)
+        addButton.backgroundColor  = UIColor(named: "Gray")
+        calendarButton.backgroundColor = UIColor(named: "Gray")
+        addButton.setImage(UIImage(named: "plus")?.withTintColor(.black),
+                           for: .normal)
+        calendarButton.setImage(UIImage(named: "calendar")?.withTintColor(.black),
+                                for: .normal)
+        notesCollectionView.reloadData()
+    }
+    
     //MARK: Setup Methods
     func setupViews(){
         
@@ -230,10 +230,8 @@ class UserNotesViewController: UIViewController, AnyView {
                                 forCellWithReuseIdentifier: "CollectionViewCell")
         stackView.addArrangedSubview(collectionView)
         
-        stackView.addArrangedSubview(stackView3)
         label.text = "All"
-        stackView3.addArrangedSubview(label)
-        stackView3.addArrangedSubview(seeMoreButton)
+        stackView.addArrangedSubview(label)
 
         notesCollectionView.delegate = self
         notesCollectionView.dataSource = self
@@ -286,18 +284,11 @@ class UserNotesViewController: UIViewController, AnyView {
             make.height.equalTo(60)
             make.width.equalToSuperview()
         }
-        stackView3.snp.makeConstraints { make in
-            make.height.equalTo(30)
-            make.width.equalToSuperview()
-        }
         label.snp.makeConstraints { make in
-            make.width.equalTo(stackView3).dividedBy(2)
-        }
-        seeMoreButton.snp.makeConstraints { make in
-            make.height.equalToSuperview()
+            make.height.equalTo(30)
         }
         notesCollectionView.snp.makeConstraints { make in
-            make.height.equalTo(500)
+            make.height.equalTo(1000)
         }
         view2.snp.makeConstraints { make in
             make.bottom.equalTo(view.safeAreaLayoutGuide)
@@ -325,6 +316,9 @@ class UserNotesViewController: UIViewController, AnyView {
             self.notes = notes
             self.notesCollectionView.reloadData()
             self.stackView.isHidden = false
+            self.notesCollectionView.snp.updateConstraints { make in
+                make.height.equalTo(self.notesCollectionView.collectionViewLayout.collectionViewContentSize.height)
+            }
             self.activityIndicator.stopAnimating()
         }
     }
@@ -333,29 +327,60 @@ class UserNotesViewController: UIViewController, AnyView {
         print(error)
     }
     
+    func openNote(note: String, documentId: String) {
+        let addVC = AddVC()
+        addVC.isModalInPresentation = true
+        addVC.modalPresentationStyle = .fullScreen
+        addVC.note = note
+        addVC.documentId = documentId
+        present(addVC, animated: true)
+    }
+    
     //MARK: Actions
     @objc func buttonAction(_ sender: UIButton){
         for button in buttons {
             if button == sender {
                 button.backgroundColor = UIColor(named: "Orange")
-                button.setImage(button.currentImage?.withTintColor(.white), for: .normal)
+                button.setImage(button.currentImage?.withTintColor(.white),
+                                for: .normal)
+                switch button {
+                case buttons[0]:
+                    print("")
+                case buttons[1]:
+                    let addVC = AddVC()
+                    addVC.modalPresentationStyle = .fullScreen
+                    addVC.isModalInPresentation = true
+                    present(addVC, animated: true)
+                case buttons[2]:
+                    let calendarVC = CalendarVC()
+                    calendarVC.modalPresentationStyle = .fullScreen
+                    calendarVC.isModalInPresentation = true
+                    present(calendarVC, animated: true)
+                default:
+                    return
+                }
+                
             } else {
                 button.backgroundColor = UIColor(named: "Gray")
-                button.setImage(button.currentImage?.withTintColor(.black), for: .normal)
+                button.setImage(button.currentImage?.withTintColor(.black),
+                                for: .normal)
             }
         }
     }
 }
 
 //MARK: Delegates
-extension UserNotesViewController: UICollectionViewDelegate, UICollectionViewDataSource {
+extension UserNotesViewController: UICollectionViewDelegate,
+                                   UICollectionViewDataSource,
+                                   UICollectionViewDelegateFlowLayout {
     
     func collectionView(_ collectionView: UICollectionView,
                         numberOfItemsInSection section: Int) -> Int {
         if collectionView == self.collectionView {
             return items.count
+        }else {
+            return notes.count
         }
-        return notes.count
     }
     
     func collectionView(_ collectionView: UICollectionView,
@@ -364,21 +389,37 @@ extension UserNotesViewController: UICollectionViewDelegate, UICollectionViewDat
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "CollectionViewCell",
                                                           for: indexPath) as! CollectionViewCell
             if items[indexPath.row] == "All" {
-                cell.button.setTitleColor(.black, for: .normal)
+                cell.button.setTitleColor(.black,
+                                          for: .normal)
                 cell.button.backgroundColor = .white
             }
-            cell.button.setTitle(items[indexPath.row], for: .normal)
+            cell.button.setTitle(items[indexPath.row],
+                                 for: .normal)
+            return cell
+        }else {
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "NotesCollectionViewCell",
+                                                          for: indexPath) as! NotesCollectionViewCell
+            let not = notes[indexPath.row].note
+            let documentId = notes[indexPath.row].documentId
+            cell.layer.cornerRadius = 25
+            cell.noteLabel.text = not
+            cell.note = not
+            cell.documentId = documentId
+            cell.delegate = self
+            cell.clipsToBounds = true
             return cell
         }
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "NotesCollectionViewCell",
-                                                      for: indexPath) as! NotesCollectionViewCell
-        cell.noteLabel.text = notes[indexPath.row].note
-        cell.snp.makeConstraints { make in
-            make.height.equalTo(230)
-            make.width.equalToSuperview()
+    }
+    
+    func collectionView(_ collectionView: UICollectionView,
+                        layout collectionViewLayout: UICollectionViewLayout,
+                        sizeForItemAt indexPath: IndexPath) -> CGSize {
+        if collectionView == self.notesCollectionView {
+            let width = collectionView.frame.width
+            return CGSize(width: width, height: 250)
+        }else {
+            let height = collectionView.frame.height
+            return CGSize(width: 90, height: height)
         }
-        cell.layer.cornerRadius = 25
-        cell.clipsToBounds = true
-        return cell
     }
 }

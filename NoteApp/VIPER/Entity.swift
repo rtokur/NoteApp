@@ -9,15 +9,11 @@ import Foundation
 
 //MARK: Model
 class UserNotes: Codable {
-    var noteId: String
     var note: String
-    var noteTitle: String
+    var documentId: String
     
-    init(noteId: String,
-         note: String,
-         noteTitle: String) {
-        self.noteId = noteId
+    init(note: String, documentId: String) {
         self.note = note
-        self.noteTitle = noteTitle
+        self.documentId = documentId
     }
 }

@@ -14,8 +14,10 @@ class CollectionViewCell: UICollectionViewCell {
     let button : UIButton = {
         let button = UIButton()
         button.backgroundColor = UIColor(named: "DarkGray")
-        button.setTitleColor(UIColor(named: "LightGray"), for: .normal)
-        button.titleLabel?.font = UIFont(name: "Font", size: 25)
+        button.setTitleColor(UIColor(named: "LightGray"),
+                             for: .normal)
+        button.titleLabel?.font = UIFont(name: "Font",
+                                         size: 25)
         button.layer.cornerRadius = 30
         button.clipsToBounds = true
         return button
@@ -43,4 +45,5 @@ class CollectionViewCell: UICollectionViewCell {
             make.edges.equalToSuperview()
         }
     }
+    
 }
