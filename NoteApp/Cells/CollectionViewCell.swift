@@ -1,5 +1,5 @@
 //
-//  NotesCollectionViewCell.swift
+//  CollectionViewCell.swift
 //  NoteApp
 //
 //  Created by Rumeysa Tokur on 3.03.2025.
@@ -8,19 +8,23 @@
 import UIKit
 import SnapKit
 
-class NotesCollectionViewCell: UICollectionViewCell {
+class CollectionViewCell: UICollectionViewCell {
     
     //MARK: Properties
-    let label : UILabel = {
-        let label = UILabel()
-        label.font = .systemFont(ofSize: 30)
-        label.textColor = .white
-        return label
+    let button : UIButton = {
+        let button = UIButton()
+        button.backgroundColor = UIColor(named: "DarkGray")
+        button.setTitleColor(UIColor(named: "LightGray"), for: .normal)
+        button.titleLabel?.font = UIFont(name: "Font", size: 25)
+        button.layer.cornerRadius = 30
+        button.clipsToBounds = true
+        return button
     }()
     
     //MARK: Lifecycle
     override init(frame: CGRect) {
         super.init(frame: frame)
+        
         setupViews()
         setupConstraints()
     }
@@ -31,12 +35,11 @@ class NotesCollectionViewCell: UICollectionViewCell {
     
     //MARK: Setup Methods
     func setupViews(){
-        contentView.backgroundColor = .darkGray
-        contentView.addSubview(label)
+        contentView.addSubview(button)
     }
     
     func setupConstraints(){
-        label.snp.makeConstraints { make in
+        button.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
     }
