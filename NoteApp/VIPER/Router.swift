@@ -28,7 +28,7 @@ class UserNotesRouter: AnyRouter {
         
         //Assign VIP
         var presenter : AnyPresenter = UserNotesPresenter()
-        var view: AnyView = UserNotesViewController()
+        var view: AnyView = LaunchScreen()
         var interactor : AnyInteractor = UserNotesInteractor()
         
         view.presenter = presenter

@@ -23,7 +23,8 @@ class AddVC: UIViewController {
                         for: .normal)
         button.tintColor = .white
         button.backgroundColor = UIColor(named: "DarkGray3")
-        button.addTarget(self, action: #selector(dismissVC(_:)),
+        button.addTarget(self,
+                         action: #selector(dismissVC(_:)),
                          for: .touchUpInside)
         return button
     }()
@@ -34,7 +35,8 @@ class AddVC: UIViewController {
                         for: .normal)
         button.tintColor = .white
         button.backgroundColor = UIColor(named: "DarkGray3")
-        button.addTarget(self, action: #selector(saveNote(_:)),
+        button.addTarget(self,
+                         action: #selector(saveNote(_:)),
                          for: .touchUpInside)
         button.isEnabled = false
         return button

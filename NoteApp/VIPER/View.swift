@@ -12,26 +12,22 @@ import SnapKit
 //Protocol
 //Reference to presenter
 
-//MARK: Protocol
-protocol AnyView {
-    var presenter: AnyPresenter? { get set }
-    
-    func updateNotes(with notes: [UserNotes])
-    func updateNotes(with error: String)
-}
-
-class UserNotesViewController: UIViewController, AnyView, openNote{
+class UserNotesViewController: UIViewController, openNote{
     
     //MARK: Properties
-    var presenter: (any AnyPresenter)?
-    
     var notes: [UserNotes] = []
     
     var items: [String] = ["All", "Task", "Notes", "Events"]
     
     var string: String = ""
     
+    var userName : String = ""
+    
+    var userId: String = ""
+    
     var buttons: [UIButton] = []
+    
+    var menus: [UIButton] = []
     
     //MARK: UI Elements
     private let scrollView: UIScrollView = {
@@ -44,14 +40,12 @@ class UserNotesViewController: UIViewController, AnyView, openNote{
         let stackview = UIStackView()
         stackview.axis = .vertical
         stackview.spacing = 20
-        stackview.isHidden = true
         return stackview
     }()
     
     private let stackView4: UIStackView = {
         let stackview = UIStackView()
         stackview.axis = .horizontal
-        stackview.backgroundColor = .red
         return stackview
     }()
     
@@ -65,7 +59,6 @@ class UserNotesViewController: UIViewController, AnyView, openNote{
     private let stackView5: UIStackView = {
         let stackview = UIStackView()
         stackview.axis = .vertical
-        stackview.backgroundColor = .brown
         return stackview
     }()
     
@@ -77,11 +70,10 @@ class UserNotesViewController: UIViewController, AnyView, openNote{
         return label
     }()
     
-    private let nameLabel : UILabel = {
+    let nameLabel : UILabel = {
         let label = UILabel()
         label.font = .boldSystemFont(ofSize: 17)
         label.textColor = .white
-        label.backgroundColor = .cyan
         return label
     }()
     
@@ -94,16 +86,6 @@ class UserNotesViewController: UIViewController, AnyView, openNote{
         return label
     }()
     
-    private let collectionView: UICollectionView = {
-        let layout = UICollectionViewFlowLayout()
-        layout.scrollDirection = .horizontal
-        let collection = UICollectionView(frame: .zero,
-                                          collectionViewLayout: layout)
-        collection.showsHorizontalScrollIndicator = false
-        collection.backgroundColor = .clear
-        return collection
-    }()
-    
     private let label: UILabel = {
         let label = UILabel()
         label.textColor = .white
@@ -111,7 +93,14 @@ class UserNotesViewController: UIViewController, AnyView, openNote{
         return label
     }()
     
-    private let notesCollectionView: UICollectionView = {
+    private let stackView3: UIStackView = {
+        let stackView = UIStackView()
+        stackView.axis = .horizontal
+        stackView.spacing = 5
+        return stackView
+    }()
+    
+    let notesCollectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .vertical
         let collection = UICollectionView(frame: .zero,
@@ -119,13 +108,6 @@ class UserNotesViewController: UIViewController, AnyView, openNote{
         collection.showsVerticalScrollIndicator = false
         collection.backgroundColor = .clear
         return collection
-    }()
-    
-    private let activityIndicator: UIActivityIndicatorView = {
-        let activity = UIActivityIndicatorView(style: .large)
-        activity.hidesWhenStopped = true
-        activity.color = .white
-        return activity
     }()
     
     private let view2: UIView = {
@@ -166,9 +148,9 @@ class UserNotesViewController: UIViewController, AnyView, openNote{
         return button
     }()
     
-    private let calendarButton: UIButton = {
+    private let loginButton: UIButton = {
         let button = UIButton()
-        button.setImage(UIImage(named: "calendar")!.withTintColor(.black),
+        button.setImage(UIImage(named: "login")!.withTintColor(.black),
                         for: .normal)
         button.backgroundColor = UIColor(named: "Gray")
         button.clipsToBounds = true
@@ -181,16 +163,19 @@ class UserNotesViewController: UIViewController, AnyView, openNote{
     //MARK: Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        activityIndicator.startAnimating()
         setupViews()
         setupConstraints()
+
     }
     
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         homeButton.layer.cornerRadius = (homeButton.frame.size.width) / 2
         addButton.layer.cornerRadius = (addButton.frame.size.width ) / 2
-        calendarButton.layer.cornerRadius = (calendarButton.frame.size.width ) / 2
+        loginButton.layer.cornerRadius = (loginButton.frame.size.width ) / 2
+        notesCollectionView.snp.updateConstraints { make in
+            make.height.equalTo(notesCollectionView.collectionViewLayout.collectionViewContentSize.height)
+        }
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -199,11 +184,12 @@ class UserNotesViewController: UIViewController, AnyView, openNote{
         homeButton.setImage(UIImage(named: "house")?.withTintColor(.white),
                             for: .normal)
         addButton.backgroundColor  = UIColor(named: "Gray")
-        calendarButton.backgroundColor = UIColor(named: "Gray")
+        loginButton.backgroundColor = UIColor(named: "Gray")
         addButton.setImage(UIImage(named: "plus")?.withTintColor(.black),
                            for: .normal)
-        calendarButton.setImage(UIImage(named: "calendar")?.withTintColor(.black),
+        loginButton.setImage(UIImage(named: "login")?.withTintColor(.black),
                                 for: .normal)
+        nameLabel.text = userName
         notesCollectionView.reloadData()
     }
     
@@ -211,7 +197,6 @@ class UserNotesViewController: UIViewController, AnyView, openNote{
     func setupViews(){
         
         view.backgroundColor = .black
-        view.addSubview(activityIndicator)
         view.addSubview(scrollView)
         
         scrollView.addSubview(stackView)
@@ -224,11 +209,30 @@ class UserNotesViewController: UIViewController, AnyView, openNote{
         
         stackView.addArrangedSubview(label2)
         
-        collectionView.delegate = self
-        collectionView.dataSource = self
-        collectionView.register(CollectionViewCell.self,
-                                forCellWithReuseIdentifier: "CollectionViewCell")
-        stackView.addArrangedSubview(collectionView)
+        stackView.addArrangedSubview(stackView3)
+        
+        var count = 0
+        for i in items {
+            let button = UIButton()
+            button.tag = count
+            button.setTitle(i, for: .normal)
+            if i == "All"{
+                button.setTitleColor(.black, for: .normal)
+                button.backgroundColor = .white
+            }else {
+                button.setTitleColor(UIColor(named: "LightGray"), for: .normal)
+                button.backgroundColor = UIColor(named: "DarkGray2")
+            }
+            button.layer.cornerRadius = 30
+            button.addTarget(self, action: #selector(changeColor(_:)), for: .touchUpInside)
+            menus.append(button)
+            stackView3.addArrangedSubview(button)
+            button.snp.makeConstraints { make in
+                make.height.equalTo(60)
+                make.width.equalTo(100)
+            }
+            count += 1
+        }
         
         label.text = "All"
         stackView.addArrangedSubview(label)
@@ -246,43 +250,43 @@ class UserNotesViewController: UIViewController, AnyView, openNote{
         buttons.append(homeButton)
         stackView2.addArrangedSubview(addButton)
         buttons.append(addButton)
-        stackView2.addArrangedSubview(calendarButton)
-        buttons.append(calendarButton)
+        stackView2.addArrangedSubview(loginButton)
+        buttons.append(loginButton)
     }
     
     func setupConstraints(){
         scrollView.snp.makeConstraints { make in
-            make.edges.equalTo(view.safeAreaLayoutGuide).inset(10)
-        }
-        activityIndicator.snp.makeConstraints { make in
-            make.center.equalToSuperview()
+            make.leading.trailing.top.equalTo(view.safeAreaLayoutGuide).inset(10)
+            make.bottom.equalTo(view.safeAreaLayoutGuide)
         }
         stackView.snp.makeConstraints { make in
             make.height.equalTo(scrollView.contentLayoutGuide)
             make.width.equalTo(scrollView.frameLayoutGuide)
         }
         stackView4.snp.makeConstraints { make in
-            make.height.equalTo(90)
+            make.height.equalTo(60)
             make.width.equalToSuperview()
         }
         imageView.snp.makeConstraints { make in
-            make.width.equalTo(90)
+            make.width.equalTo(60)
         }
         stackView5.snp.makeConstraints { make in
             make.height.equalToSuperview()
         }
         welcomeLabel.snp.makeConstraints { make in
-            make.height.equalTo(40)
+            make.height.equalTo(22)
+            make.top.leading.equalToSuperview().inset(5)
+            
         }
         nameLabel.snp.makeConstraints { make in
-            make.height.equalTo(50)
+            make.height.equalTo(28)
+            make.bottom.leading.equalToSuperview().inset(5)
         }
         label2.snp.makeConstraints { make in
             make.height.equalTo(160)
         }
-        collectionView.snp.makeConstraints { make in
+        stackView3.snp.makeConstraints { make in
             make.height.equalTo(60)
-            make.width.equalToSuperview()
         }
         label.snp.makeConstraints { make in
             make.height.equalTo(30)
@@ -305,28 +309,12 @@ class UserNotesViewController: UIViewController, AnyView, openNote{
         addButton.snp.makeConstraints { make in
             make.width.height.equalTo(70)
         }
-        calendarButton.snp.makeConstraints { make in
+        loginButton.snp.makeConstraints { make in
             make.width.height.equalTo(70)
         }
     }
     
     //MARK: Functions
-    func updateNotes(with notes: [UserNotes]) {
-        DispatchQueue.main.async {
-            self.notes = notes
-            self.notesCollectionView.reloadData()
-            self.stackView.isHidden = false
-            self.notesCollectionView.snp.updateConstraints { make in
-                make.height.equalTo(self.notesCollectionView.collectionViewLayout.collectionViewContentSize.height)
-            }
-            self.activityIndicator.stopAnimating()
-        }
-    }
-    
-    func updateNotes(with error: String) {
-        print(error)
-    }
-    
     func openNote(note: String, documentId: String) {
         let addVC = AddVC()
         addVC.isModalInPresentation = true
@@ -352,10 +340,16 @@ class UserNotesViewController: UIViewController, AnyView, openNote{
                     addVC.isModalInPresentation = true
                     present(addVC, animated: true)
                 case buttons[2]:
-                    let calendarVC = CalendarVC()
-                    calendarVC.modalPresentationStyle = .fullScreen
-                    calendarVC.isModalInPresentation = true
-                    present(calendarVC, animated: true)
+                    if userId != "" {
+                        let profileVC = ProfileVC()
+                        profileVC.isModalInPresentation = true
+                        profileVC.modalPresentationStyle = .fullScreen
+                        present(profileVC, animated: true)
+                    }
+                    let loginVC = LoginVC()
+                    loginVC.modalPresentationStyle = .fullScreen
+                    loginVC.isModalInPresentation = true
+                    present(loginVC, animated: true)
                 default:
                     return
                 }
@@ -367,6 +361,23 @@ class UserNotesViewController: UIViewController, AnyView, openNote{
             }
         }
     }
+    
+    @objc func changeColor(_ sender: UIButton){
+        for button in menus {
+            if sender == button{
+                button.backgroundColor = .white
+                button.setTitle(items[sender.tag], for: .normal)
+                button.setTitleColor(.black, for: .normal)
+                label.text = items[sender.tag]
+            }
+            else {
+                button.backgroundColor = UIColor(named: "DarkGray2")
+                button.setTitle(items[button.tag], for: .normal)
+                button.setTitleColor(UIColor(named: "LightGray"), for: .normal)
+            }
+        }
+        
+    }
 }
 
 //MARK: Delegates
@@ -376,50 +387,31 @@ extension UserNotesViewController: UICollectionViewDelegate,
     
     func collectionView(_ collectionView: UICollectionView,
                         numberOfItemsInSection section: Int) -> Int {
-        if collectionView == self.collectionView {
-            return items.count
-        }else {
-            return notes.count
-        }
+        return notes.count
     }
     
     func collectionView(_ collectionView: UICollectionView,
                         cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        if collectionView == self.collectionView {
-            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "CollectionViewCell",
-                                                          for: indexPath) as! CollectionViewCell
-            if items[indexPath.row] == "All" {
-                cell.button.setTitleColor(.black,
-                                          for: .normal)
-                cell.button.backgroundColor = .white
-            }
-            cell.button.setTitle(items[indexPath.row],
-                                 for: .normal)
-            return cell
-        }else {
-            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "NotesCollectionViewCell",
-                                                          for: indexPath) as! NotesCollectionViewCell
-            let not = notes[indexPath.row].note
-            let documentId = notes[indexPath.row].documentId
-            cell.layer.cornerRadius = 25
-            cell.noteLabel.text = not
-            cell.note = not
-            cell.documentId = documentId
-            cell.delegate = self
-            cell.clipsToBounds = true
-            return cell
-        }
+
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "NotesCollectionViewCell",
+                                                      for: indexPath) as! NotesCollectionViewCell
+        let not = notes[indexPath.row].note
+        let documentId = notes[indexPath.row].documentId
+        cell.layer.cornerRadius = 25
+        cell.noteLabel.text = not
+        cell.note = not
+        cell.documentId = documentId
+        cell.delegate = self
+        cell.clipsToBounds = true
+        return cell
+        
     }
     
     func collectionView(_ collectionView: UICollectionView,
                         layout collectionViewLayout: UICollectionViewLayout,
                         sizeForItemAt indexPath: IndexPath) -> CGSize {
-        if collectionView == self.notesCollectionView {
-            let width = collectionView.frame.width
-            return CGSize(width: width, height: 250)
-        }else {
-            let height = collectionView.frame.height
-            return CGSize(width: 90, height: height)
-        }
+        let width = collectionView.frame.width
+        return CGSize(width: width, height: 250)
+        
     }
 }
