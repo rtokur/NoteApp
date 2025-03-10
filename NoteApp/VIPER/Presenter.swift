@@ -16,10 +16,13 @@ protocol AnyPresenter {
     var view: AnyView? { get set }
     var router: AnyRouter? { get set }
     
-    func interactorDidFetch(with result: Result<[UserNotes],Error>)
+    func interactorDidFetch(with result: Result<[UserNotes],
+                            Error>)
+    func userNotLogin()
 }
 
 class UserNotesPresenter: AnyPresenter {
+    
     //MARK: Properties
     var interactor: AnyInteractor? {
         didSet {
@@ -32,13 +35,18 @@ class UserNotesPresenter: AnyPresenter {
     var router: AnyRouter?
 
     //MARK: Method
-    func interactorDidFetch(with result: Result<[UserNotes], any Error>) {
+    func interactorDidFetch(with result: Result<[UserNotes],
+                            any Error>) {
         switch result {
         case .success(let notes):
             view?.updateNotes(with: notes)
         case .failure(let error):
             view?.updateNotes(with: error.localizedDescription)
         }
+    }
+    
+    func userNotLogin() {
+        view?.userNotLogin()
     }
 
     

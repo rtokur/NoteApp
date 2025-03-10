@@ -8,9 +8,7 @@
 import Foundation
 import UIKit
 import SnapKit
-//View Controller
-//Protocol
-//Reference to presenter
+import FirebaseAuth
 
 class UserNotesViewController: UIViewController, openNote{
     
@@ -49,13 +47,6 @@ class UserNotesViewController: UIViewController, openNote{
         return stackview
     }()
     
-    private let imageView: UIImageView = {
-        let image = UIImageView()
-        image.contentMode = .scaleAspectFit
-        image.backgroundColor = .blue
-        return image
-    }()
-    
     private let stackView5: UIStackView = {
         let stackview = UIStackView()
         stackview.axis = .vertical
@@ -75,6 +66,17 @@ class UserNotesViewController: UIViewController, openNote{
         label.font = .boldSystemFont(ofSize: 17)
         label.textColor = .white
         return label
+    }()
+    
+    private let logoutButton: UIButton = {
+        let button = UIButton()
+        button.setImage(UIImage(systemName: "iphone.and.arrow.right.outward")?.withTintColor(.white), for: .normal)
+        button.tintColor = .white
+        button.layer.cornerRadius = 30
+        button.backgroundColor = UIColor(named: "Orange")
+        button.addTarget(self, action: #selector(logOutBtn(_:)), for: .touchUpInside)
+        button.isHidden = false
+        return button
     }()
     
     private let label2: UILabel = {
@@ -157,6 +159,7 @@ class UserNotesViewController: UIViewController, openNote{
         button.addTarget(self,
                          action: #selector(buttonAction),
                          for: .touchUpInside)
+        button.isHidden = true
         return button
     }()
     
@@ -202,29 +205,32 @@ class UserNotesViewController: UIViewController, openNote{
         scrollView.addSubview(stackView)
         
         stackView.addArrangedSubview(stackView4)
-        stackView4.addArrangedSubview(imageView)
         stackView4.addArrangedSubview(stackView5)
         stackView5.addArrangedSubview(welcomeLabel)
         stackView5.addArrangedSubview(nameLabel)
+        stackView4.addArrangedSubview(logoutButton)
         
         stackView.addArrangedSubview(label2)
         
         stackView.addArrangedSubview(stackView3)
-        
         var count = 0
         for i in items {
             let button = UIButton()
             button.tag = count
-            button.setTitle(i, for: .normal)
+            button.setTitle(i,
+                            for: .normal)
             if i == "All"{
-                button.setTitleColor(.black, for: .normal)
+                button.setTitleColor(.black,
+                                     for: .normal)
                 button.backgroundColor = .white
             }else {
-                button.setTitleColor(UIColor(named: "LightGray"), for: .normal)
+                button.setTitleColor(UIColor(named: "LightGray"),
+                                     for: .normal)
                 button.backgroundColor = UIColor(named: "DarkGray2")
             }
             button.layer.cornerRadius = 30
-            button.addTarget(self, action: #selector(changeColor(_:)), for: .touchUpInside)
+            button.addTarget(self, action: #selector(changeColor(_:)),
+                             for: .touchUpInside)
             menus.append(button)
             stackView3.addArrangedSubview(button)
             button.snp.makeConstraints { make in
@@ -250,6 +256,11 @@ class UserNotesViewController: UIViewController, openNote{
         buttons.append(homeButton)
         stackView2.addArrangedSubview(addButton)
         buttons.append(addButton)
+        if userId != "" {
+            loginButton.isHidden = true
+        }else {
+            loginButton.isHidden = false
+        }
         stackView2.addArrangedSubview(loginButton)
         buttons.append(loginButton)
     }
@@ -267,9 +278,6 @@ class UserNotesViewController: UIViewController, openNote{
             make.height.equalTo(60)
             make.width.equalToSuperview()
         }
-        imageView.snp.makeConstraints { make in
-            make.width.equalTo(60)
-        }
         stackView5.snp.makeConstraints { make in
             make.height.equalToSuperview()
         }
@@ -281,6 +289,9 @@ class UserNotesViewController: UIViewController, openNote{
         nameLabel.snp.makeConstraints { make in
             make.height.equalTo(28)
             make.bottom.leading.equalToSuperview().inset(5)
+        }
+        logoutButton.snp.makeConstraints { make in
+            make.width.equalTo(60)
         }
         label2.snp.makeConstraints { make in
             make.height.equalTo(160)
@@ -294,24 +305,49 @@ class UserNotesViewController: UIViewController, openNote{
         notesCollectionView.snp.makeConstraints { make in
             make.height.equalTo(1000)
         }
-        view2.snp.makeConstraints { make in
-            make.bottom.equalTo(view.safeAreaLayoutGuide)
-            make.height.equalTo(80)
-            make.width.equalTo(230)
-            make.centerX.equalToSuperview()
+
+        if userId != "" {
+            view2.snp.makeConstraints { make in
+                make.bottom.equalTo(view.safeAreaLayoutGuide)
+                make.height.equalTo(80)
+                make.width.equalTo(155)
+                make.centerX.equalToSuperview()
+            }
+            stackView2.snp.makeConstraints { make in
+                make.edges.equalToSuperview().inset(5)
+            }
+            homeButton.snp.makeConstraints { make in
+                make.width.height.equalTo(70)
+            }
+            addButton.snp.makeConstraints { make in
+                make.width.height.equalTo(70)
+            }
+            loginButton.snp.makeConstraints { make in
+                make.width.height.equalTo(0)
+            }
+        }else {
+            view2.snp.makeConstraints { make in
+                make.bottom.equalTo(view.safeAreaLayoutGuide)
+                make.height.equalTo(80)
+                make.width.equalTo(230)
+                make.centerX.equalToSuperview()
+            }
+            stackView2.snp.makeConstraints { make in
+                make.edges.equalToSuperview().inset(5)
+            }
+            homeButton.snp.makeConstraints { make in
+                make.width.height.equalTo(70)
+            }
+            addButton.snp.makeConstraints { make in
+                make.width.height.equalTo(70)
+            }
+            loginButton.snp.makeConstraints { make in
+                make.width.height.equalTo(70)
+            }
+            logoutButton.isHidden = true
         }
-        stackView2.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(5)
-        }
-        homeButton.snp.makeConstraints { make in
-            make.width.height.equalTo(70)
-        }
-        addButton.snp.makeConstraints { make in
-            make.width.height.equalTo(70)
-        }
-        loginButton.snp.makeConstraints { make in
-            make.width.height.equalTo(70)
-        }
+        
+
     }
     
     //MARK: Functions
@@ -321,6 +357,7 @@ class UserNotesViewController: UIViewController, openNote{
         addVC.modalPresentationStyle = .fullScreen
         addVC.note = note
         addVC.documentId = documentId
+        addVC.userId = userId
         present(addVC, animated: true)
     }
     
@@ -336,20 +373,17 @@ class UserNotesViewController: UIViewController, openNote{
                     print("")
                 case buttons[1]:
                     let addVC = AddVC()
+                    addVC.userId = userId
                     addVC.modalPresentationStyle = .fullScreen
                     addVC.isModalInPresentation = true
                     present(addVC, animated: true)
                 case buttons[2]:
-                    if userId != "" {
-                        let profileVC = ProfileVC()
-                        profileVC.isModalInPresentation = true
-                        profileVC.modalPresentationStyle = .fullScreen
-                        present(profileVC, animated: true)
+                    if userId == "" {
+                        let loginVC = LoginVC()
+                        loginVC.modalPresentationStyle = .fullScreen
+                        loginVC.isModalInPresentation = true
+                        present(loginVC, animated: true)
                     }
-                    let loginVC = LoginVC()
-                    loginVC.modalPresentationStyle = .fullScreen
-                    loginVC.isModalInPresentation = true
-                    present(loginVC, animated: true)
                 default:
                     return
                 }
@@ -378,6 +412,18 @@ class UserNotesViewController: UIViewController, openNote{
         }
         
     }
+    
+    @objc func logOutBtn(_ sender: UIButton){
+        Task {
+            try Auth.auth().signOut()
+            let router = UserNotesRouter.start()  // Router'ı başlat
+            let initialVC = router.entry  // Giriş ekranı veya ana ekranı
+            if let window = UIApplication.shared.windows.first {
+                window.rootViewController = initialVC
+                window.makeKeyAndVisible()
+            }
+        }
+    }
 }
 
 //MARK: Delegates
@@ -399,6 +445,7 @@ extension UserNotesViewController: UICollectionViewDelegate,
         let documentId = notes[indexPath.row].documentId
         cell.layer.cornerRadius = 25
         cell.noteLabel.text = not
+        cell.dateLabel.text = notes[indexPath.row].date
         cell.note = not
         cell.documentId = documentId
         cell.delegate = self
@@ -411,7 +458,7 @@ extension UserNotesViewController: UICollectionViewDelegate,
                         layout collectionViewLayout: UICollectionViewLayout,
                         sizeForItemAt indexPath: IndexPath) -> CGSize {
         let width = collectionView.frame.width
-        return CGSize(width: width, height: 250)
+        return CGSize(width: width, height: 220)
         
     }
 }

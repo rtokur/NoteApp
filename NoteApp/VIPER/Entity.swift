@@ -11,9 +11,11 @@ import Foundation
 class UserNotes: Codable {
     var note: String
     var documentId: String
+    var date: String
     
-    init(note: String, documentId: String) {
+    init(note: String, documentId: String, date: String) {
         self.note = note
         self.documentId = documentId
+        self.date = date
     }
 }

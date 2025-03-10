@@ -12,7 +12,7 @@ import FirebaseAuth
 class LoginVC: UIViewController {
     
     //MARK: UI Elements
-    private let backButton: UIButton = {
+    let backButton: UIButton = {
         let button = UIButton()
         button.setImage(UIImage(systemName: "chevron.left"),
                         for: .normal)
@@ -21,6 +21,7 @@ class LoginVC: UIViewController {
         button.addTarget(self,
                          action: #selector(dismissVC(_:)),
                          for: .touchUpInside)
+        button.layer.cornerRadius = 25
         return button
     }()
     
@@ -105,7 +106,9 @@ class LoginVC: UIViewController {
         button.setTitleColor(.white, for: .normal)
         button.titleLabel?.font = .boldSystemFont(ofSize: 17)
         button.layer.cornerRadius = 30
-        button.addTarget(self, action: #selector(signInButtonAction(_:)), for: .touchUpInside)
+        button.addTarget(self,
+                         action: #selector(signInButtonAction(_:)),
+                         for: .touchUpInside)
         return button
     }()
     
@@ -120,14 +123,17 @@ class LoginVC: UIViewController {
         button.layer.cornerRadius = 30
         button.layer.borderColor = UIColor(named: "Orange")!.cgColor
         button.layer.borderWidth = 1
-        button.addTarget(self, action: #selector(signUpButtonAction(_:)), for: .touchUpInside)
+        button.addTarget(self,
+                         action: #selector(signUpButtonAction(_:)),
+                         for: .touchUpInside)
         return button
     }()
     
     private let forgotPasswordButton: UIButton = {
         let button = UIButton()
         button.backgroundColor = .clear
-        button.setTitleColor(UIColor(named: "Orange"), for: .normal)
+        button.setTitleColor(UIColor(named: "Orange"),
+                             for: .normal)
         button.titleLabel?.font = .boldSystemFont(ofSize: 17)
         button.setAttributedTitle(NSAttributedString(string: "Forgot Password",
                                                      attributes: [NSAttributedString.Key.underlineStyle : NSUnderlineStyle.single.rawValue]),
@@ -141,30 +147,40 @@ class LoginVC: UIViewController {
 
         setupViews()
         setupConstraints()
-        // Do any additional setup after loading the view.
     }
 
     //MARK: Setup Methods
     func setupViews(){
         view.backgroundColor = .black
-        backButton.layer.cornerRadius = 25
+        
         view.addSubview(backButton)
+        
         view.addSubview(scrollView)
+        
         scrollView.addSubview(stackView)
+        
         stackView.addArrangedSubview(image)
+        
         stackView.addArrangedSubview(label)
+        
         stackView.addArrangedSubview(emailLabel)
+        
         let padding = UIView(frame: CGRect(x: 0, y: 0, width: 20, height: emailText.frame.height))
         emailText.leftView = padding
         emailText.leftViewMode = .always
         stackView.addArrangedSubview(emailText)
+        
         stackView.addArrangedSubview(passwordLabel)
+        
         let padding2 = UIView(frame: CGRect(x: 0, y: 0, width: 20, height: passwordText.frame.height))
         passwordText.leftView = padding2
         passwordText.leftViewMode = .always
         stackView.addArrangedSubview(passwordText)
+        
         stackView.addArrangedSubview(signInButton)
+        
         stackView.addArrangedSubview(signUpButton)
+        
         stackView.addArrangedSubview(forgotPasswordButton)
     }
 
@@ -216,20 +232,29 @@ class LoginVC: UIViewController {
     }
     
     @objc func signInButtonAction(_ sender: UIButton){
-        guard let email = emailText.text , let password = passwordText.text else { return }
+        guard let email = emailText.text ,
+                let password = passwordText.text else { return }
         Task{
-            try await Auth.auth().signIn(withEmail: email , password: password) { result, error in
+            Auth.auth().signIn(withEmail: email ,
+                               password: password) { result, error in
                 guard error == nil else {
-                    let alert = UIAlertController(title: "Error", message: error?.localizedDescription, preferredStyle: .alert)
-                    alert.addAction(UIAlertAction(title: "OK", style: .cancel))
-                    self.present(alert, animated: true)
+                    let alert = UIAlertController(title: "Error",
+                                                  message: error?.localizedDescription,
+                                                  preferredStyle: .alert)
+                    alert.addAction(UIAlertAction(title: "OK",
+                                                  style: .cancel))
+                    self.present(alert,
+                                 animated: true)
                     return
                 }
                 
-                let vc = UserNotesViewController()
-                vc.modalPresentationStyle = .fullScreen
-                vc.isModalInPresentation = true
-                self.present(vc, animated: true)
+                let router = UserNotesRouter.start()
+                if let launchScreen = router.entry {
+                    launchScreen.isModalInPresentation = true
+                    launchScreen.modalPresentationStyle = .fullScreen
+                    self.present(launchScreen,
+                                 animated: true)
+                }
             }
         }
     }
@@ -238,7 +263,8 @@ class LoginVC: UIViewController {
         let signUp = SignUpVC()
         signUp.modalPresentationStyle = .fullScreen
         signUp.isModalInPresentation = true
-        present(signUp, animated: true)
+        present(signUp,
+                animated: true)
     }
 }
 

@@ -8,6 +8,7 @@
 import UIKit
 import SnapKit
 
+//MARK: Protocol
 protocol openNote {
     func openNote(note: String, documentId: String)
 }
@@ -31,15 +32,6 @@ class NotesCollectionViewCell: UICollectionViewCell {
         let label = UILabel()
         label.font = .systemFont(ofSize: 17)
         label.textColor = UIColor(named: "LightGray")
-        label.text = "20 Oct, 2025"
-        return label
-    }()
-    
-    let titleLabel : UILabel = {
-        let label = UILabel()
-        label.font = .boldSystemFont(ofSize: 25)
-        label.textColor = .white
-        label.text = "Design Smart Home"
         return label
     }()
     
@@ -80,7 +72,6 @@ class NotesCollectionViewCell: UICollectionViewCell {
         contentView.addSubview(stackView)
         
         stackView.addArrangedSubview(dateLabel)
-        stackView.addArrangedSubview(titleLabel)
         stackView.addArrangedSubview(noteLabel)
         
         contentView.addSubview(button)
@@ -92,9 +83,6 @@ class NotesCollectionViewCell: UICollectionViewCell {
         }
         dateLabel.snp.makeConstraints { make in
             make.height.equalTo(20)
-        }
-        titleLabel.snp.makeConstraints { make in
-            make.height.equalTo(30)
         }
         noteLabel.snp.makeConstraints { make in
             make.height.equalTo(100)

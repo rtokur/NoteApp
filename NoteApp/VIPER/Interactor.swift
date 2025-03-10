@@ -30,31 +30,42 @@ class UserNotesInteractor: AnyInteractor {
     
     //MARK: Method
     func getNotes() {
-        Task {
-            try await db.collection("Notes").getDocuments() { data, error in
-                guard let data = data,
-                      error == nil else {
-                    self.presenter?.interactorDidFetch(with: .failure(error!))
-                    return
-                }
-                do {
-                    self.notes.removeAll()
-                    data.documents.forEach { note in
-                        if let not = note["note"] as? String,
-                            let documentId = note.documentID as? String{
-                            let notee = UserNotes(note: not,
-                                                  documentId: documentId)
-                            self.notes.append(notee)
-                        }
+        guard let userId = Auth.auth().currentUser?.uid  else {
+            DispatchQueue.main.async {
+                self.presenter?.userNotLogin()
+            }
+            return
+        }
+        
+        db.collection("Users").document(userId).collection("Notes").getDocuments() { data, error in
+            guard let data = data,
+                  error == nil else {
+                self.presenter?.interactorDidFetch(with: .failure(error!))
+                return
+            }
+            do {
+                self.notes.removeAll()
+                data.documents.forEach { note in
+                    if let not = note["note"] as? String,
+                       let documentId = note.documentID as? String,
+                       let date = note["date"] as? String{
+                        let notee = UserNotes(note: not,
+                                              documentId: documentId,
+                                              date: date)
+                        self.notes.append(notee)
                     }
+                }
+                DispatchQueue.main.async {
                     self.presenter?.interactorDidFetch(with: .success(self.notes))
-                }catch{
+                }
+                
+            }catch{
+                DispatchQueue.main.async {
                     self.presenter?.interactorDidFetch(with: .failure(error))
                 }
+                
             }
-            
         }
     }
-    
     
 }

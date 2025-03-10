@@ -9,6 +9,9 @@ import UIKit
 import SnapKit
 import FirebaseAuth
 import FirebaseFirestore
+//View Controller
+//Protocol
+//Reference to presenter
 
 //MARK: Protocol
 protocol AnyView {
@@ -16,12 +19,14 @@ protocol AnyView {
     
     func updateNotes(with notes: [UserNotes])
     func updateNotes(with error: String)
+    func userNotLogin()
 }
 
 class LaunchScreen: UIViewController, AnyView {
+    
     //MARK: Properties
-    var presenter: (any AnyPresenter)?
-
+    var presenter: AnyPresenter?
+    
     let db = Firestore.firestore()
     
     //MARK: UI Elements
@@ -39,37 +44,16 @@ class LaunchScreen: UIViewController, AnyView {
         setupViews()
         setupConstraints()
     }
-
-    //MARK: Functions
-    func updateNotes(with notes: [UserNotes]) {
-        DispatchQueue.main.async {
-            let vc = UserNotesViewController()
-            if let user = Auth.auth().currentUser {
-                vc.userId = user.uid
-                Task {
-                    let document = try await self.db.collection("Users").document(user.uid).getDocument()
-                    let username = document.data()?["userName"] as! String
-                    print(username)
-                    vc.userName = username
-                    vc.nameLabel.text = username
-                }
-                
-            }
-            vc.notes = notes
-            vc.notesCollectionView.reloadData()
-            self.activityIndicator.stopAnimating()
-            vc.modalPresentationStyle = .fullScreen
-            vc.isModalInPresentation = true
-            self.present(vc, animated: true)
-        }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        self.presenter?.interactor?.getNotes()
     }
     
-    func updateNotes(with error: String) {
-        print(error)
-    }
-    
+    //MARK: Setup Methods
     func setupViews(){
         view.backgroundColor = .black
+        
         view.addSubview(activityIndicator)
     }
     
@@ -78,4 +62,57 @@ class LaunchScreen: UIViewController, AnyView {
             make.center.equalToSuperview()
         }
     }
+    
+    //MARK: Functions
+    func updateNotes(with notes: [UserNotes]) {
+        DispatchQueue.main.async {
+            guard let user = Auth.auth().currentUser else {
+                self.userNotLogin()
+                return
+            }
+            
+            let vc = UserNotesViewController()
+            vc.userId = user.uid
+            
+            Task {
+                do {
+                    let document = try await self.db.collection("Users").document(user.uid).getDocument()
+                    if let username = document.data()?["userName"] as? String {
+                        DispatchQueue.main.async {
+                            vc.userName = username
+                            vc.nameLabel.text = username
+                            vc.notes = notes
+                            vc.notesCollectionView.reloadData()
+                            self.activityIndicator.stopAnimating()
+                            vc.modalPresentationStyle = .fullScreen
+                            vc.isModalInPresentation = true
+                            self.present(vc, animated: true)
+                        }
+                    }
+                    
+                    
+                } catch {
+                    print("Firestore Kullanıcı Adı Çekme Hatası: \(error.localizedDescription)")
+                    self.userNotLogin()
+                }
+            }
+        }
+    }
+    
+    func updateNotes(with error: String) {
+        print(error)
+        userNotLogin()
+    }
+    
+    func userNotLogin() {
+        DispatchQueue.main.async {
+            let loginVc = LoginVC()
+            loginVc.backButton.isHidden = true
+            loginVc.isModalInPresentation = true
+            loginVc.modalPresentationStyle = .fullScreen
+            self.present(loginVc, animated: true)
+        }
+        
+    }
+    
 }

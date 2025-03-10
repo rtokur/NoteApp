@@ -144,19 +144,24 @@ class SignUpVC: UIViewController {
                              for: .normal)
         button.titleLabel?.font = .boldSystemFont(ofSize: 17)
         button.layer.cornerRadius = 30
-        button.addTarget(self, action: #selector(signUpButtonAction(_:)), for: .touchUpInside)
+        button.addTarget(self,
+                         action: #selector(signUpButtonAction(_:)),
+                         for: .touchUpInside)
         return button
     }()
     
     private let signInButton: UIButton = {
         let button = UIButton()
         button.backgroundColor = .clear
-        button.setTitleColor(UIColor(named: "Orange"), for: .normal)
+        button.setTitleColor(UIColor(named: "Orange"),
+                             for: .normal)
         button.titleLabel?.font = .boldSystemFont(ofSize: 17)
         button.setAttributedTitle(NSAttributedString(string: "I Already Have Account",
                                                      attributes: [NSAttributedString.Key.underlineStyle : NSUnderlineStyle.single.rawValue]),
                                   for: .normal)
-        button.addTarget(self, action: #selector(dismissVC(_:)), for: .touchUpInside)
+        button.addTarget(self,
+                         action: #selector(dismissVC(_:)),
+                         for: .touchUpInside)
         return button
     }()
     
@@ -173,30 +178,55 @@ class SignUpVC: UIViewController {
         view.backgroundColor = .black
 
         view.addSubview(scrollView)
+        
         scrollView.addSubview(stackView)
+        
         stackView.addArrangedSubview(image)
+        
         stackView.addArrangedSubview(label)
+        
         stackView.addArrangedSubview(nameLabel)
-        let padding4 = UIView(frame: CGRect(x: 0, y: 0, width: 20, height: nameText.frame.height))
+        
+        let padding4 = UIView(frame: CGRect(x: 0,
+                                            y: 0,
+                                            width: 20,
+                                            height: nameText.frame.height))
         nameText.leftView = padding4
         nameText.leftViewMode = .always
         stackView.addArrangedSubview(nameText)
+        
         stackView.addArrangedSubview(emailLabel)
-        let padding = UIView(frame: CGRect(x: 0, y: 0, width: 20, height: emailText.frame.height))
+        
+        let padding = UIView(frame: CGRect(x: 0,
+                                           y: 0,
+                                           width: 20,
+                                           height: emailText.frame.height))
         emailText.leftView = padding
         emailText.leftViewMode = .always
         stackView.addArrangedSubview(emailText)
+        
         stackView.addArrangedSubview(passwordLabel)
-        let padding2 = UIView(frame: CGRect(x: 0, y: 0, width: 20, height: passwordText.frame.height))
+        
+        let padding2 = UIView(frame: CGRect(x: 0,
+                                            y: 0,
+                                            width: 20,
+                                            height: passwordText.frame.height))
         passwordText.leftView = padding2
         passwordText.leftViewMode = .always
         stackView.addArrangedSubview(passwordText)
+        
         stackView.addArrangedSubview(confirmPasswordLabel)
-        let padding3 = UIView(frame: CGRect(x: 0, y: 0, width: 20, height: confirmPasswordText.frame.height))
+        
+        let padding3 = UIView(frame: CGRect(x: 0,
+                                            y: 0,
+                                            width: 20,
+                                            height: confirmPasswordText.frame.height))
         confirmPasswordText.leftView = padding3
         confirmPasswordText.leftViewMode = .always
         stackView.addArrangedSubview(confirmPasswordText)
+        
         stackView.addArrangedSubview(signUpButton)
+        
         stackView.addArrangedSubview(signInButton)
     }
 
@@ -253,41 +283,67 @@ class SignUpVC: UIViewController {
     }
     
     @objc func signUpButtonAction(_ sender: UIButton){
-        guard let email = emailText.text , let password = passwordText.text, let password2 = confirmPasswordText.text, password == password2, let username = nameText.text else {
+        guard let email = emailText.text ,
+                let password = passwordText.text,
+                let password2 = confirmPasswordText.text,
+                password == password2,
+                let username = nameText.text else {
+            let alert = UIAlertController(title: "Error",
+                                          message: "Please fill all area.",
+                                          preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "OK",
+                                          style: .cancel))
+            self.present(alert,
+                         animated: true)
             return
         }
         
         Task{
-            try await Auth.auth().createUser(withEmail: email, password: password) { result, error in
+            try await Auth.auth().createUser(withEmail: email,
+                                             password: password) { result, error in
                 guard error == nil else {
-                    let alert = UIAlertController(title: "Error", message: error?.localizedDescription, preferredStyle: .alert)
-                    alert.addAction(UIAlertAction(title: "OK", style: .cancel))
-                    self.present(alert, animated: true)
+                    let alert = UIAlertController(title: "Error",
+                                                  message: error?.localizedDescription,
+                                                  preferredStyle: .alert)
+                    alert.addAction(UIAlertAction(title: "OK",
+                                                  style: .cancel))
+                    self.present(alert,
+                                 animated: true)
                     return
                 }
                 
                 do {
                     if let userId = result?.user.uid as? String {
-                        self.db.collection("Users").document(userId).setData(["userName": username, "email": email]) { error in
+                        self.db.collection("Users").document(userId).setData(["userName": username,
+                                                                              "email": email]) { error in
                             guard error == nil else {
-                                let alert = UIAlertController(title: "Error", message: error?.localizedDescription, preferredStyle: .alert)
-                                alert.addAction(UIAlertAction(title: "OK", style: .cancel))
-                                self.present(alert, animated: true)
+                                let alert = UIAlertController(title: "Error",
+                                                              message: error?.localizedDescription,
+                                                              preferredStyle: .alert)
+                                alert.addAction(UIAlertAction(title: "OK",
+                                                              style: .cancel))
+                                self.present(alert,
+                                             animated: true)
                                 return
                             }
                             
-                            let ls = LaunchScreen()
-                            
-                            ls.modalPresentationStyle = .fullScreen
-                            ls.isModalInPresentation = true
-                            self.present(ls, animated: true)
+                            let router = UserNotesRouter.start()
+                            if let launchScreen = router.entry {
+                                launchScreen.isModalInPresentation = true
+                                launchScreen.modalPresentationStyle = .fullScreen
+                                self.present(launchScreen,
+                                             animated: true)
+                            }
                         }
                     }
-                    
                 }catch{
-                    let alert = UIAlertController(title: "Error", message: error.localizedDescription, preferredStyle: .alert)
-                    alert.addAction(UIAlertAction(title: "OK", style: .cancel))
-                    self.present(alert, animated: true)
+                    let alert = UIAlertController(title: "Error",
+                                                  message: error.localizedDescription,
+                                                  preferredStyle: .alert)
+                    alert.addAction(UIAlertAction(title: "OK",
+                                                  style: .cancel))
+                    self.present(alert,
+                                 animated: true)
                 }
                 
             }
