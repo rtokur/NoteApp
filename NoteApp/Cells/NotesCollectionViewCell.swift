@@ -10,21 +10,21 @@ import SnapKit
 
 //MARK: Protocol
 protocol openNote {
-    func openNote(note: String, documentId: String)
+    func openNote(note: NSAttributedString, documentId: String)
 }
 
 class NotesCollectionViewCell: UICollectionViewCell {
     
     //MARK: Properties
     var delegate: openNote?
-    var note: String = ""
+    var note: NSAttributedString?
     var documentId: String = ""
     
     //MARK: UI Elements
     let stackView : UIStackView = {
         let stackview = UIStackView()
         stackview.axis = .vertical
-        stackview.spacing = 20
+        stackview.spacing = 25
         return stackview
     }()
     
@@ -35,11 +35,12 @@ class NotesCollectionViewCell: UICollectionViewCell {
         return label
     }()
     
-    let noteLabel : UILabel = {
-        let label = UILabel()
-        label.font = .systemFont(ofSize: 17)
-        label.textColor = UIColor(named: "LightGray")
-        return label
+    let noteView : UITextView = {
+        let text = UITextView()
+        text.backgroundColor = .clear
+        text.textContainer.lineBreakMode = .byWordWrapping
+        text.isEditable = false
+        return text
     }()
     
     let button: UIButton = {
@@ -72,7 +73,7 @@ class NotesCollectionViewCell: UICollectionViewCell {
         contentView.addSubview(stackView)
         
         stackView.addArrangedSubview(dateLabel)
-        stackView.addArrangedSubview(noteLabel)
+        stackView.addArrangedSubview(noteView)
         
         contentView.addSubview(button)
     }
@@ -84,7 +85,7 @@ class NotesCollectionViewCell: UICollectionViewCell {
         dateLabel.snp.makeConstraints { make in
             make.height.equalTo(20)
         }
-        noteLabel.snp.makeConstraints { make in
+        noteView.snp.makeConstraints { make in
             make.height.equalTo(100)
         }
         button.snp.makeConstraints { make in
@@ -95,7 +96,7 @@ class NotesCollectionViewCell: UICollectionViewCell {
     
     //MARK: Actions
     @objc func openNote(_ sender: UIButton){
-        delegate?.openNote(note: note,
+        delegate?.openNote(note: note!,
                            documentId: documentId)
     }
 }

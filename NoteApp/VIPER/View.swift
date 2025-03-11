@@ -168,7 +168,7 @@ class UserNotesViewController: UIViewController, openNote{
         super.viewDidLoad()
         setupViews()
         setupConstraints()
-
+        
     }
     
     override func viewDidLayoutSubviews() {
@@ -198,7 +198,7 @@ class UserNotesViewController: UIViewController, openNote{
     
     //MARK: Setup Methods
     func setupViews(){
-        
+
         view.backgroundColor = .black
         view.addSubview(scrollView)
         
@@ -213,32 +213,8 @@ class UserNotesViewController: UIViewController, openNote{
         stackView.addArrangedSubview(label2)
         
         stackView.addArrangedSubview(stackView3)
-        var count = 0
-        for i in items {
-            let button = UIButton()
-            button.tag = count
-            button.setTitle(i,
-                            for: .normal)
-            if i == "All"{
-                button.setTitleColor(.black,
-                                     for: .normal)
-                button.backgroundColor = .white
-            }else {
-                button.setTitleColor(UIColor(named: "LightGray"),
-                                     for: .normal)
-                button.backgroundColor = UIColor(named: "DarkGray2")
-            }
-            button.layer.cornerRadius = 30
-            button.addTarget(self, action: #selector(changeColor(_:)),
-                             for: .touchUpInside)
-            menus.append(button)
-            stackView3.addArrangedSubview(button)
-            button.snp.makeConstraints { make in
-                make.height.equalTo(60)
-                make.width.equalTo(100)
-            }
-            count += 1
-        }
+        
+        createBtn()
         
         label.text = "All"
         stackView.addArrangedSubview(label)
@@ -351,7 +327,7 @@ class UserNotesViewController: UIViewController, openNote{
     }
     
     //MARK: Functions
-    func openNote(note: String, documentId: String) {
+    func openNote(note: NSAttributedString, documentId: String) {
         let addVC = AddVC()
         addVC.isModalInPresentation = true
         addVC.modalPresentationStyle = .fullScreen
@@ -361,6 +337,68 @@ class UserNotesViewController: UIViewController, openNote{
         present(addVC, animated: true)
     }
     
+    func fromDictionary(note: [String: Any]) -> NSAttributedString {
+        let result = NSMutableAttributedString()
+        
+        guard let notes = note["note"] as? [[String: Any]] else { return result }
+        for item in notes {
+            if let text = item["text"] as? String, let rangeArray = item["range"] as? [Int], rangeArray.count == 2 {
+                let attributed = NSMutableAttributedString(string: text)
+                let range = NSRange(location: 0, length: text.count)
+                
+                if let fontDict = item["font"] as? [String: Any],
+                   let size = fontDict["size"] as? CGFloat {
+                    var font = UIFont.systemFont(ofSize: size)
+                    if let isBold = fontDict["isBold"] as? Bool, isBold {
+                        font = UIFont.boldSystemFont(ofSize: size)
+                    }
+                    if let isItalic = fontDict["isItalic"] as? Bool, isItalic {
+                        font = UIFont.italicSystemFont(ofSize: size)
+                    }
+                    attributed.addAttribute(.font, value: font, range: range)
+                }
+                if let colorHex = item["color"] as? String {
+                    let color = UIColor(hex: colorHex)
+                    attributed.addAttribute(.foregroundColor, value: color, range: range)
+                }
+                if let underline = item["underline"] as? Int {
+                    attributed.addAttribute(.underlineStyle, value: underline, range: range)
+                }
+                result.append(attributed)
+            }
+        }
+        return result
+    }
+    
+    func createBtn(){
+        var count = 0
+        for i in items {
+            let button = UIButton()
+            button.tag = count
+            button.setTitle(i,
+                            for: .normal)
+            if i == "All"{
+                button.setTitleColor(.black,
+                                     for: .normal)
+                button.backgroundColor = .white
+            }else {
+                button.setTitleColor(UIColor(named: "LightGray"),
+                                     for: .normal)
+                button.backgroundColor = UIColor(named: "DarkGray2")
+            }
+            button.layer.cornerRadius = 30
+            button.addTarget(self, action: #selector(changeColor(_:)),
+                             for: .touchUpInside)
+            menus.append(button)
+            stackView3.addArrangedSubview(button)
+            button.snp.makeConstraints { make in
+                make.height.equalTo(60)
+                make.width.equalTo(100)
+            }
+            count += 1
+        }
+    }
+     
     //MARK: Actions
     @objc func buttonAction(_ sender: UIButton){
         for button in buttons {
@@ -441,12 +479,13 @@ extension UserNotesViewController: UICollectionViewDelegate,
 
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "NotesCollectionViewCell",
                                                       for: indexPath) as! NotesCollectionViewCell
-        let not = notes[indexPath.row].note
+        if let noteData = notes[indexPath.row].getNote() {
+            cell.noteView.attributedText = fromDictionary(note: ["note": noteData])
+        }
         let documentId = notes[indexPath.row].documentId
         cell.layer.cornerRadius = 25
-        cell.noteLabel.text = not
         cell.dateLabel.text = notes[indexPath.row].date
-        cell.note = not
+        cell.note = cell.noteView.attributedText
         cell.documentId = documentId
         cell.delegate = self
         cell.clipsToBounds = true

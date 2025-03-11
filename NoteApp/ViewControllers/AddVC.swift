@@ -13,7 +13,7 @@ class AddVC: UIViewController, ChangeStyle, UITextViewDelegate {
 
     //MARK: Properties
     private let db = Firestore.firestore()
-    var note: String = ""
+    var note: NSAttributedString?
     var documentId: String = ""
     var userId: String = ""
     
@@ -121,7 +121,7 @@ class AddVC: UIViewController, ChangeStyle, UITextViewDelegate {
     //MARK: Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        
         setupViews()
         setupConstraints()
     }
@@ -148,8 +148,8 @@ class AddVC: UIViewController, ChangeStyle, UITextViewDelegate {
         dateLabel.text = date.string(from: Date())
         stackView.addArrangedSubview(dateLabel)
         
-        if note != "" {
-            text.text = note
+        if note != nil {
+            text.attributedText = note!
         }
         text.delegate = self
         stackView.addArrangedSubview(text)
@@ -209,15 +209,15 @@ class AddVC: UIViewController, ChangeStyle, UITextViewDelegate {
     
     //MARK: Functions
     func textViewDidChange(_ textView: UITextView) {
-        guard let not = textView.text else { return }
-        if note != "" {
+        guard let not = textView.attributedText else { return }
+        if note != nil {
             if note != not {
                 doneButton.isEnabled = true
             }else {
                 doneButton.isEnabled = false
             }
         }else {
-            if not != "" {
+            if not != nil {
                 doneButton.isEnabled = true
             } else {
                 doneButton.isEnabled = false
@@ -298,6 +298,33 @@ class AddVC: UIViewController, ChangeStyle, UITextViewDelegate {
         text.selectedRange = range
     }
     
+    func toDictionary() -> [[String: Any]]{
+        var attributesArray : [[String : Any]] = []
+        guard let attributed = text.attributedText else { return []}
+        attributed.enumerateAttributes(in: NSRange(location: 0,
+                                                   length: attributed.length),
+                                       options: []) { attributes, range, _ in
+            var dict : [String: Any] = ["range": [range.location,
+                                                  range.length],
+                                        "text": (attributed.string as NSString).substring(with: range)]
+            for (key, value) in attributes {
+                if let font = value as? UIFont {
+                    dict["font"] = ["size": font.pointSize,
+                                    "isBold": font.fontDescriptor.symbolicTraits.contains(.traitBold),
+                                    "isItalic": font.fontDescriptor.symbolicTraits.contains(.traitItalic)]
+                }
+                if let color = value as? UIColor {
+                    dict["color"] = color.hexString
+                }
+                if let underline = value as? Int {
+                    dict["underline"] = underline
+                }
+            }
+            attributesArray.append(dict)
+        }
+        return attributesArray
+    }
+    
     //MARK: Actions
     @objc func dismissVC(_ sender: UIButton){
         dismiss(animated: true)
@@ -311,16 +338,19 @@ class AddVC: UIViewController, ChangeStyle, UITextViewDelegate {
             let date = DateFormatter()
             date.dateFormat = "dd/MM/yyyy HH:mm"
             let datee = date.string(from: Date())
-            
+            let noteData = toDictionary()
             Task {
                 do {
-                    try await db.collection("Users").document(userId).collection("Notes").document(documentId).setData(["note": note,
+                    try await db.collection("Users").document(userId).collection("Notes").document(documentId).setData(["note": noteData,
                                                                                                                         "date": datee])
-                    let router = UserNotesRouter.start()
-                    if let launchScreen = router.entry {
-                        launchScreen.isModalInPresentation = true
-                        launchScreen.modalPresentationStyle = .fullScreen
-                        self.present(launchScreen, animated: true)
+                    DispatchQueue.main.async {
+                        let router = UserNotesRouter.start()
+                        if let launchScreen = router.entry {
+                            launchScreen.isModalInPresentation = true
+                            launchScreen.modalPresentationStyle = .fullScreen
+                            self.present(launchScreen,
+                                         animated: true)
+                        }
                     }
                 }catch{
                     print(error)
@@ -333,7 +363,7 @@ class AddVC: UIViewController, ChangeStyle, UITextViewDelegate {
                 let datee = date.string(from: Date())
                 Task {
                     do {
-                        try await db.collection("Users").document(userId).collection("Notes").document().setData(["note": note,
+                        try await db.collection("Users").document(userId).collection("Notes").document().setData(["note": toDictionary(),
                                                                                                                   "date": datee])
                         let router = UserNotesRouter.start()
                         if let launchScreen = router.entry {
@@ -386,3 +416,5 @@ class AddVC: UIViewController, ChangeStyle, UITextViewDelegate {
         vieww.isHidden = false
     }
 }
+
+

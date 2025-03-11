@@ -13,9 +13,14 @@ class UserNotes: Codable {
     var documentId: String
     var date: String
     
-    init(note: String, documentId: String, date: String) {
-        self.note = note
+    init(note: [[String: Any]], documentId: String, date: String) {
+        self.note = try! JSONSerialization.data(withJSONObject: note, options: .prettyPrinted).base64EncodedString()
         self.documentId = documentId
         self.date = date
+    }
+    
+    func getNote() -> [[String: Any]]? {
+            guard let noteData = Data(base64Encoded: note) else { return nil }
+            return try? JSONSerialization.jsonObject(with: noteData, options: []) as? [[String: Any]]
     }
 }

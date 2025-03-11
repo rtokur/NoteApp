@@ -34,7 +34,7 @@ class UserNotesPresenter: AnyPresenter {
     
     var router: AnyRouter?
 
-    //MARK: Method
+    //MARK: Methods
     func interactorDidFetch(with result: Result<[UserNotes],
                             any Error>) {
         switch result {

@@ -46,7 +46,7 @@ class UserNotesInteractor: AnyInteractor {
             do {
                 self.notes.removeAll()
                 data.documents.forEach { note in
-                    if let not = note["note"] as? String,
+                    if let not = note["note"] as? [[String: Any]],
                        let documentId = note.documentID as? String,
                        let date = note["date"] as? String{
                         let notee = UserNotes(note: not,

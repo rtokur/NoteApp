@@ -89,8 +89,6 @@ class LaunchScreen: UIViewController, AnyView {
                             self.present(vc, animated: true)
                         }
                     }
-                    
-                    
                 } catch {
                     print("Firestore Kullanıcı Adı Çekme Hatası: \(error.localizedDescription)")
                     self.userNotLogin()
@@ -112,7 +110,5 @@ class LaunchScreen: UIViewController, AnyView {
             loginVc.modalPresentationStyle = .fullScreen
             self.present(loginVc, animated: true)
         }
-        
     }
-    
 }

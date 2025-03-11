@@ -165,14 +165,20 @@ class LoginVC: UIViewController {
         
         stackView.addArrangedSubview(emailLabel)
         
-        let padding = UIView(frame: CGRect(x: 0, y: 0, width: 20, height: emailText.frame.height))
+        let padding = UIView(frame: CGRect(x: 0,
+                                           y: 0,
+                                           width: 20,
+                                           height: emailText.frame.height))
         emailText.leftView = padding
         emailText.leftViewMode = .always
         stackView.addArrangedSubview(emailText)
         
         stackView.addArrangedSubview(passwordLabel)
         
-        let padding2 = UIView(frame: CGRect(x: 0, y: 0, width: 20, height: passwordText.frame.height))
+        let padding2 = UIView(frame: CGRect(x: 0,
+                                            y: 0,
+                                            width: 20,
+                                            height: passwordText.frame.height))
         passwordText.leftView = padding2
         passwordText.leftViewMode = .always
         stackView.addArrangedSubview(passwordText)
