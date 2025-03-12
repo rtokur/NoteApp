@@ -12,19 +12,6 @@ import FirebaseAuth
 class LoginVC: UIViewController {
     
     //MARK: UI Elements
-    let backButton: UIButton = {
-        let button = UIButton()
-        button.setImage(UIImage(systemName: "chevron.left"),
-                        for: .normal)
-        button.tintColor = .white
-        button.backgroundColor = UIColor(named: "DarkGray3")
-        button.addTarget(self,
-                         action: #selector(dismissVC(_:)),
-                         for: .touchUpInside)
-        button.layer.cornerRadius = 25
-        return button
-    }()
-    
     private let scrollView: UIScrollView = {
         let scroll = UIScrollView()
         scroll.showsVerticalScrollIndicator = false
@@ -157,8 +144,6 @@ class LoginVC: UIViewController {
     func setupViews(){
         view.backgroundColor = .black
         
-        view.addSubview(backButton)
-        
         view.addSubview(scrollView)
         
         scrollView.addSubview(stackView)
@@ -195,10 +180,6 @@ class LoginVC: UIViewController {
     }
 
     func setupConstraints(){
-        backButton.snp.makeConstraints { make in
-            make.top.leading.equalTo(view.safeAreaLayoutGuide).inset(10)
-            make.height.width.equalTo(50)
-        }
         scrollView.snp.makeConstraints { make in
             make.leading.trailing.bottom.equalTo(view.safeAreaLayoutGuide).inset(10)
             make.top.equalTo(view.safeAreaLayoutGuide).inset(80)
@@ -249,10 +230,6 @@ class LoginVC: UIViewController {
     }
     
     //MARK: Actions
-    @objc func dismissVC(_ sender: UIButton){
-        dismiss(animated: true)
-    }
-    
     @objc func keyboardWillShow(_ notification: Notification){
         guard let keyboard = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect else { return }
         scrollView.contentInset.bottom = keyboard.height + 20

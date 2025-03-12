@@ -105,7 +105,6 @@ class LaunchScreen: UIViewController, AnyView {
     func userNotLogin() {
         DispatchQueue.main.async {
             let loginVc = LoginVC()
-            loginVc.backButton.isHidden = true
             loginVc.isModalInPresentation = true
             loginVc.modalPresentationStyle = .fullScreen
             self.present(loginVc, animated: true)
