@@ -48,10 +48,11 @@ class UserNotesInteractor: AnyInteractor {
                 data.documents.forEach { note in
                     if let not = note["note"] as? [[String: Any]],
                        let documentId = note.documentID as? String,
-                       let date = note["date"] as? String{
+                       let date = note["date"] as? String,
+                       let type = note["type"] as? String{
                         let notee = UserNotes(note: not,
                                               documentId: documentId,
-                                              date: date)
+                                              date: date, type: type)
                         self.notes.append(notee)
                     }
                 }

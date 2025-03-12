@@ -15,7 +15,9 @@ class UserNotesViewController: UIViewController, openNote{
     //MARK: Properties
     var notes: [UserNotes] = []
     
-    var items: [String] = ["All", "Task", "Notes", "Events"]
+    var filtered : [UserNotes] = []
+    
+    var items: [String] = ["All", "Tasks", "Notes"]
     
     var string: String = ""
     
@@ -98,7 +100,6 @@ class UserNotesViewController: UIViewController, openNote{
     private let stackView3: UIStackView = {
         let stackView = UIStackView()
         stackView.axis = .horizontal
-        stackView.spacing = 5
         return stackView
     }()
     
@@ -150,19 +151,6 @@ class UserNotesViewController: UIViewController, openNote{
         return button
     }()
     
-    private let loginButton: UIButton = {
-        let button = UIButton()
-        button.setImage(UIImage(named: "login")!.withTintColor(.black),
-                        for: .normal)
-        button.backgroundColor = UIColor(named: "Gray")
-        button.clipsToBounds = true
-        button.addTarget(self,
-                         action: #selector(buttonAction),
-                         for: .touchUpInside)
-        button.isHidden = true
-        return button
-    }()
-    
     //MARK: Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -175,7 +163,6 @@ class UserNotesViewController: UIViewController, openNote{
         super.viewDidLayoutSubviews()
         homeButton.layer.cornerRadius = (homeButton.frame.size.width) / 2
         addButton.layer.cornerRadius = (addButton.frame.size.width ) / 2
-        loginButton.layer.cornerRadius = (loginButton.frame.size.width ) / 2
         notesCollectionView.snp.updateConstraints { make in
             make.height.equalTo(notesCollectionView.collectionViewLayout.collectionViewContentSize.height)
         }
@@ -187,11 +174,8 @@ class UserNotesViewController: UIViewController, openNote{
         homeButton.setImage(UIImage(named: "house")?.withTintColor(.white),
                             for: .normal)
         addButton.backgroundColor  = UIColor(named: "Gray")
-        loginButton.backgroundColor = UIColor(named: "Gray")
         addButton.setImage(UIImage(named: "plus")?.withTintColor(.black),
                            for: .normal)
-        loginButton.setImage(UIImage(named: "login")?.withTintColor(.black),
-                                for: .normal)
         nameLabel.text = userName
         notesCollectionView.reloadData()
     }
@@ -199,6 +183,8 @@ class UserNotesViewController: UIViewController, openNote{
     //MARK: Setup Methods
     func setupViews(){
 
+        filtered = notes
+        
         view.backgroundColor = .black
         view.addSubview(scrollView)
         
@@ -232,13 +218,6 @@ class UserNotesViewController: UIViewController, openNote{
         buttons.append(homeButton)
         stackView2.addArrangedSubview(addButton)
         buttons.append(addButton)
-        if userId != "" {
-            loginButton.isHidden = true
-        }else {
-            loginButton.isHidden = false
-        }
-        stackView2.addArrangedSubview(loginButton)
-        buttons.append(loginButton)
     }
     
     func setupConstraints(){
@@ -281,59 +260,32 @@ class UserNotesViewController: UIViewController, openNote{
         notesCollectionView.snp.makeConstraints { make in
             make.height.equalTo(1000)
         }
-
-        if userId != "" {
-            view2.snp.makeConstraints { make in
-                make.bottom.equalTo(view.safeAreaLayoutGuide)
-                make.height.equalTo(80)
-                make.width.equalTo(155)
-                make.centerX.equalToSuperview()
-            }
-            stackView2.snp.makeConstraints { make in
-                make.edges.equalToSuperview().inset(5)
-            }
-            homeButton.snp.makeConstraints { make in
-                make.width.height.equalTo(70)
-            }
-            addButton.snp.makeConstraints { make in
-                make.width.height.equalTo(70)
-            }
-            loginButton.snp.makeConstraints { make in
-                make.width.height.equalTo(0)
-            }
-        }else {
-            view2.snp.makeConstraints { make in
-                make.bottom.equalTo(view.safeAreaLayoutGuide)
-                make.height.equalTo(80)
-                make.width.equalTo(230)
-                make.centerX.equalToSuperview()
-            }
-            stackView2.snp.makeConstraints { make in
-                make.edges.equalToSuperview().inset(5)
-            }
-            homeButton.snp.makeConstraints { make in
-                make.width.height.equalTo(70)
-            }
-            addButton.snp.makeConstraints { make in
-                make.width.height.equalTo(70)
-            }
-            loginButton.snp.makeConstraints { make in
-                make.width.height.equalTo(70)
-            }
-            logoutButton.isHidden = true
+        view2.snp.makeConstraints { make in
+            make.bottom.equalTo(view.safeAreaLayoutGuide)
+            make.height.equalTo(80)
+            make.width.equalTo(155)
+            make.centerX.equalToSuperview()
         }
-        
-
+        stackView2.snp.makeConstraints { make in
+            make.edges.equalToSuperview().inset(5)
+        }
+        homeButton.snp.makeConstraints { make in
+            make.width.height.equalTo(70)
+        }
+        addButton.snp.makeConstraints { make in
+            make.width.height.equalTo(70)
+        }
     }
     
     //MARK: Functions
-    func openNote(note: NSAttributedString, documentId: String) {
+    func openNote(note: NSAttributedString, documentId: String, type: String) {
         let addVC = AddVC()
         addVC.isModalInPresentation = true
         addVC.modalPresentationStyle = .fullScreen
         addVC.note = note
         addVC.documentId = documentId
         addVC.userId = userId
+        addVC.type = type
         present(addVC, animated: true)
     }
     
@@ -393,7 +345,7 @@ class UserNotesViewController: UIViewController, openNote{
             stackView3.addArrangedSubview(button)
             button.snp.makeConstraints { make in
                 make.height.equalTo(60)
-                make.width.equalTo(100)
+                make.width.equalToSuperview().dividedBy(3)
             }
             count += 1
         }
@@ -415,13 +367,6 @@ class UserNotesViewController: UIViewController, openNote{
                     addVC.modalPresentationStyle = .fullScreen
                     addVC.isModalInPresentation = true
                     present(addVC, animated: true)
-                case buttons[2]:
-                    if userId == "" {
-                        let loginVC = LoginVC()
-                        loginVC.modalPresentationStyle = .fullScreen
-                        loginVC.isModalInPresentation = true
-                        present(loginVC, animated: true)
-                    }
                 default:
                     return
                 }
@@ -435,12 +380,22 @@ class UserNotesViewController: UIViewController, openNote{
     }
     
     @objc func changeColor(_ sender: UIButton){
+        filtered.removeAll()
         for button in menus {
             if sender == button{
                 button.backgroundColor = .white
                 button.setTitle(items[sender.tag], for: .normal)
                 button.setTitleColor(.black, for: .normal)
                 label.text = items[sender.tag]
+                notes.forEach { note in
+                    if note.type == button.titleLabel?.text {
+                        filtered.append(note)
+                    }
+                }
+                if button.titleLabel?.text == "All"{
+                    filtered = notes
+                }
+                notesCollectionView.reloadData()
             }
             else {
                 button.backgroundColor = UIColor(named: "DarkGray2")
@@ -471,7 +426,7 @@ extension UserNotesViewController: UICollectionViewDelegate,
     
     func collectionView(_ collectionView: UICollectionView,
                         numberOfItemsInSection section: Int) -> Int {
-        return notes.count
+        return filtered.count
     }
     
     func collectionView(_ collectionView: UICollectionView,
@@ -479,15 +434,16 @@ extension UserNotesViewController: UICollectionViewDelegate,
 
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "NotesCollectionViewCell",
                                                       for: indexPath) as! NotesCollectionViewCell
-        if let noteData = notes[indexPath.row].getNote() {
+        if let noteData = filtered[indexPath.row].getNote() {
             cell.noteView.attributedText = fromDictionary(note: ["note": noteData])
         }
-        let documentId = notes[indexPath.row].documentId
+        let documentId = filtered[indexPath.row].documentId
         cell.layer.cornerRadius = 25
-        cell.dateLabel.text = notes[indexPath.row].date
+        cell.dateLabel.text = filtered[indexPath.row].date
         cell.note = cell.noteView.attributedText
         cell.documentId = documentId
         cell.delegate = self
+        cell.type = filtered[indexPath.row].type
         cell.clipsToBounds = true
         return cell
         
@@ -497,7 +453,8 @@ extension UserNotesViewController: UICollectionViewDelegate,
                         layout collectionViewLayout: UICollectionViewLayout,
                         sizeForItemAt indexPath: IndexPath) -> CGSize {
         let width = collectionView.frame.width
-        return CGSize(width: width, height: 220)
+        return CGSize(width: width,
+                      height: 220)
         
     }
 }

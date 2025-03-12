@@ -10,7 +10,7 @@ import SnapKit
 
 //MARK: Protocol
 protocol openNote {
-    func openNote(note: NSAttributedString, documentId: String)
+    func openNote(note: NSAttributedString, documentId: String, type: String)
 }
 
 class NotesCollectionViewCell: UICollectionViewCell {
@@ -19,6 +19,7 @@ class NotesCollectionViewCell: UICollectionViewCell {
     var delegate: openNote?
     var note: NSAttributedString?
     var documentId: String = ""
+    var type: String = ""
     
     //MARK: UI Elements
     let stackView : UIStackView = {
@@ -86,7 +87,7 @@ class NotesCollectionViewCell: UICollectionViewCell {
             make.height.equalTo(20)
         }
         noteView.snp.makeConstraints { make in
-            make.height.equalTo(100)
+            make.width.equalToSuperview()
         }
         button.snp.makeConstraints { make in
             make.top.trailing.equalToSuperview().inset(20)
@@ -97,6 +98,6 @@ class NotesCollectionViewCell: UICollectionViewCell {
     //MARK: Actions
     @objc func openNote(_ sender: UIButton){
         delegate?.openNote(note: note!,
-                           documentId: documentId)
+                           documentId: documentId, type: type)
     }
 }

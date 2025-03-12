@@ -16,17 +16,25 @@ class AddVC: UIViewController, ChangeStyle, UITextViewDelegate {
     var note: NSAttributedString?
     var documentId: String = ""
     var userId: String = ""
-    
+    var type: String = ""
     //MARK: UI Elements
     private let backButton: UIButton = {
         let button = UIButton()
         button.setImage(UIImage(systemName: "chevron.left"),
                         for: .normal)
         button.tintColor = .white
+        button.layer.cornerRadius = 25
         button.backgroundColor = UIColor(named: "DarkGray3")
         button.addTarget(self,
                          action: #selector(dismissVC(_:)),
                          for: .touchUpInside)
+        return button
+    }()
+    
+    let typeButton: UIButton = {
+        let button = UIButton()
+        button.layer.cornerRadius = 25
+        button.backgroundColor = UIColor(named: "Orange")
         return button
     }()
     
@@ -39,6 +47,7 @@ class AddVC: UIViewController, ChangeStyle, UITextViewDelegate {
         button.addTarget(self,
                          action: #selector(openBar(_:)),
                          for: .touchUpInside)
+        button.layer.cornerRadius = 25
         return button
     }()
     
@@ -51,6 +60,7 @@ class AddVC: UIViewController, ChangeStyle, UITextViewDelegate {
         button.addTarget(self,
                          action: #selector(saveNote(_:)),
                          for: .touchUpInside)
+        button.layer.cornerRadius = 25
         button.isEnabled = false
         return button
     }()
@@ -124,19 +134,44 @@ class AddVC: UIViewController, ChangeStyle, UITextViewDelegate {
         
         setupViews()
         setupConstraints()
+        setupKeyboard()
     }
     
     //MARK: Setup Methods
     func setupViews(){
         view.backgroundColor = .black
-        
-        backButton.layer.cornerRadius = 25
+
         view.addSubview(backButton)
+        let options = ["Notes","Tasks"]
+        var menuChildren: [UIMenuElement] = []
+        for option in options {
+            if type != "" {
+                let state: UIMenuElement.State = (option == type) ? .on : .off
+                menuChildren.append(UIAction(title: option,
+                                             state: state,
+                                             handler: { action in
+                    
+                }))
+            }else{
+                menuChildren.append(UIAction(title: option,
+                                             handler: { [weak self] action in
+                    if action.title == "Tasks"{
+                        self?.text.attributedText = NSAttributedString(string: "✓ ",
+                                                                       attributes: [.foregroundColor: UIColor.white])
+                    }
+                }))
+            }
+        }
+        typeButton.menu = UIMenu(options: .displayInline,
+                                 children: menuChildren)
+        typeButton.showsMenuAsPrimaryAction = true
+        typeButton.changesSelectionAsPrimaryAction = true
         
-        moreButton.layer.cornerRadius = 25
+        view.addSubview(typeButton)
+        
+        
         view.addSubview(moreButton)
         
-        doneButton.layer.cornerRadius = 25
         view.addSubview(doneButton)
         
         view.addSubview(scrollView)
@@ -168,6 +203,12 @@ class AddVC: UIViewController, ChangeStyle, UITextViewDelegate {
             make.top.leading.equalTo(view.safeAreaLayoutGuide).inset(10)
             make.height.width.equalTo(50)
         }
+        typeButton.snp.makeConstraints { make in
+            make.top.equalTo(view.safeAreaLayoutGuide).inset(10)
+            make.leading.equalTo(backButton).inset(55)
+            make.trailing.equalTo(moreButton).inset(55)
+            make.height.equalTo(50)
+        }
         moreButton.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide).inset(10)
             make.trailing.equalTo(doneButton).inset(55)
@@ -192,7 +233,7 @@ class AddVC: UIViewController, ChangeStyle, UITextViewDelegate {
             make.height.equalTo(500)
         }
         vieww.snp.makeConstraints { make in
-            make.bottom.equalTo(view.safeAreaLayoutGuide)
+            make.bottom.equalTo(view)
             make.width.equalToSuperview()
             make.height.equalTo(50)
         }
@@ -208,12 +249,20 @@ class AddVC: UIViewController, ChangeStyle, UITextViewDelegate {
     }
     
     //MARK: Functions
+    func setupKeyboard() {
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow(_:)), name: UIResponder.keyboardWillShowNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide(_:)), name: UIResponder.keyboardWillHideNotification, object: nil)
+    }
+    
     func textViewDidChange(_ textView: UITextView) {
         guard let not = textView.attributedText else { return }
         if note != nil {
             if note != not {
                 doneButton.isEnabled = true
-            }else {
+            }else if type != typeButton.titleLabel?.text {
+                doneButton.isEnabled = true
+            }
+            else {
                 doneButton.isEnabled = false
             }
         }else {
@@ -330,6 +379,19 @@ class AddVC: UIViewController, ChangeStyle, UITextViewDelegate {
         dismiss(animated: true)
     }
     
+    @objc func keyboardWillShow(_ notification: Notification){
+        guard let keyboard = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect else { return }
+        vieww.snp.updateConstraints { make in
+            make.bottom.equalTo(view).inset(keyboard.height)
+        }
+    }
+    
+    @objc func keyboardWillHide(_ notification: Notification){
+        vieww.snp.updateConstraints { make in
+            make.bottom.equalTo(view)
+        }
+    }
+    
     @objc func saveNote(_ sender: UIButton){
         guard let note = text.text else { return }
         if note != "",
@@ -338,11 +400,12 @@ class AddVC: UIViewController, ChangeStyle, UITextViewDelegate {
             let date = DateFormatter()
             date.dateFormat = "dd/MM/yyyy HH:mm"
             let datee = date.string(from: Date())
-            let noteData = toDictionary()
+            let type = typeButton.titleLabel?.text
             Task {
                 do {
-                    try await db.collection("Users").document(userId).collection("Notes").document(documentId).setData(["note": noteData,
-                                                                                                                        "date": datee])
+                    try await db.collection("Users").document(userId).collection("Notes").document(documentId).setData(["note": toDictionary(),
+                                                                                                                        "date": datee,
+                                                                                                                        "type": type])
                     DispatchQueue.main.async {
                         let router = UserNotesRouter.start()
                         if let launchScreen = router.entry {
@@ -361,10 +424,12 @@ class AddVC: UIViewController, ChangeStyle, UITextViewDelegate {
                 let date = DateFormatter()
                 date.dateFormat = "dd/MM/yyyy HH:mm"
                 let datee = date.string(from: Date())
+                let type = typeButton.titleLabel?.text
                 Task {
                     do {
                         try await db.collection("Users").document(userId).collection("Notes").document().setData(["note": toDictionary(),
-                                                                                                                  "date": datee])
+                                                                                                                  "date": datee,
+                                                                                                                  "type": type])
                         let router = UserNotesRouter.start()
                         if let launchScreen = router.entry {
                             launchScreen.isModalInPresentation = true

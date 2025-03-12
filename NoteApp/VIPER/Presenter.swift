@@ -48,7 +48,5 @@ class UserNotesPresenter: AnyPresenter {
     func userNotLogin() {
         view?.userNotLogin()
     }
-
-    
     
 }

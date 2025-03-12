@@ -138,6 +138,9 @@ class LoginVC: UIViewController {
         button.setAttributedTitle(NSAttributedString(string: "Forgot Password",
                                                      attributes: [NSAttributedString.Key.underlineStyle : NSUnderlineStyle.single.rawValue]),
                                   for: .normal)
+        button.addTarget(self,
+                         action: #selector(forgotPassword(_:)),
+                         for: .touchUpInside)
         return button
     }()
     
@@ -147,6 +150,7 @@ class LoginVC: UIViewController {
 
         setupViews()
         setupConstraints()
+        setupKeyboard()
     }
 
     //MARK: Setup Methods
@@ -231,10 +235,31 @@ class LoginVC: UIViewController {
             make.height.equalTo(60)
         }
     }
+
+    //MARK: Functions
+    func setupKeyboard() {
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(keyboardWillShow(_:)),
+                                               name: UIResponder.keyboardWillShowNotification,
+                                               object: nil)
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(keyboardWillHide(_:)),
+                                               name: UIResponder.keyboardWillHideNotification,
+                                               object: nil)
+    }
     
     //MARK: Actions
     @objc func dismissVC(_ sender: UIButton){
         dismiss(animated: true)
+    }
+    
+    @objc func keyboardWillShow(_ notification: Notification){
+        guard let keyboard = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect else { return }
+        scrollView.contentInset.bottom = keyboard.height + 20
+    }
+    
+    @objc func keyboardWillHide(_ notification: Notification){
+        scrollView.contentInset.bottom = 0
     }
     
     @objc func signInButtonAction(_ sender: UIButton){
@@ -271,6 +296,39 @@ class LoginVC: UIViewController {
         signUp.isModalInPresentation = true
         present(signUp,
                 animated: true)
+    }
+    
+    @objc func forgotPassword(_ sender: UIButton){
+        guard let email = emailText.text else {
+            let alert = UIAlertController(title: "Error",
+                                          message: "Please enter your email address.",
+                                          preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "OK",
+                                          style: .cancel))
+            self.present(alert,
+                         animated: true)
+            return
+        }
+        Auth.auth().sendPasswordReset(withEmail: email) { error in
+            guard error == nil else {
+                
+                let alert = UIAlertController(title: "Error",
+                                              message: error?.localizedDescription,
+                                              preferredStyle: .alert)
+                alert.addAction(UIAlertAction(title: "OK",
+                                              style: .cancel))
+                self.present(alert,
+                             animated: true)
+                return
+            }
+            let alert = UIAlertController(title: "Success",
+                                          message: "A password renewal link has been sent to your email. Please check your email.",
+                                          preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "OK",
+                                          style: .cancel))
+            self.present(alert,
+                         animated: true)
+        }
     }
 }
 

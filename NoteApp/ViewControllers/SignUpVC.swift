@@ -171,6 +171,7 @@ class SignUpVC: UIViewController {
 
         setupViews()
         setupConstraints()
+        setupKeyboard()
     }
 
     //MARK: Setup Methods
@@ -277,9 +278,24 @@ class SignUpVC: UIViewController {
         }
     }
     
+    //MARK: Functions
+    func setupKeyboard() {
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow(_:)), name: UIResponder.keyboardWillShowNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide(_:)), name: UIResponder.keyboardWillHideNotification, object: nil)
+    }
+    
     //MARK: Actions
     @objc func dismissVC(_ sender: UIButton){
         dismiss(animated: true)
+    }
+    
+    @objc func keyboardWillShow(_ notification: Notification){
+        guard let keyboard = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect else { return }
+        scrollView.contentInset.bottom = keyboard.height + 20
+    }
+    
+    @objc func keyboardWillHide(_ notification: Notification){
+        scrollView.contentInset.bottom = 0
     }
     
     @objc func signUpButtonAction(_ sender: UIButton){

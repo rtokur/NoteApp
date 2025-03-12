@@ -12,11 +12,13 @@ class UserNotes: Codable {
     var note: String
     var documentId: String
     var date: String
+    var type: String
     
-    init(note: [[String: Any]], documentId: String, date: String) {
+    init(note: [[String: Any]], documentId: String, date: String, type: String) {
         self.note = try! JSONSerialization.data(withJSONObject: note, options: .prettyPrinted).base64EncodedString()
         self.documentId = documentId
         self.date = date
+        self.type = type
     }
     
     func getNote() -> [[String: Any]]? {
