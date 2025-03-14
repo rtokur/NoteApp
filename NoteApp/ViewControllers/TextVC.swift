@@ -79,6 +79,8 @@ class TextVC: UIViewController {
         let button = UIButton()
         button.backgroundColor = .darkGray3
         button.layer.cornerRadius = 15
+        button.tintColor = .white
+        button.setImage(UIImage(systemName: "circle.fill"), for: .normal)
         return button
     }()
     
@@ -196,34 +198,40 @@ class TextVC: UIViewController {
     
     func createMenuButton(){
         let blue = UIAction(title: "Blue",
-                            image: UIImage(systemName: "circle.fill")){ _ in
+                            image: UIImage(systemName: "circle.fill")?.withTintColor(.blue, renderingMode: .alwaysOriginal)){ _ in
             self.delegate?.changeStyle(int: 3,
                                        color: UIColor.blue)
+            self.colorButton.tintColor = .blue
         }
         let red = UIAction(title: "Red",
-                           image: UIImage(systemName: "circle.fill")){ _ in
+                           image: UIImage(systemName: "circle.fill")?.withTintColor(.red, renderingMode: .alwaysOriginal)){ _ in
             self.delegate?.changeStyle(int: 3,
                                        color: UIColor.red)
+            self.colorButton.tintColor = .red
         }
         let yellow = UIAction(title: "Yellow",
-                              image: UIImage(systemName: "circle.fill")){ _ in
+                              image: UIImage(systemName: "circle.fill")?.withTintColor(.yellow, renderingMode: .alwaysOriginal)){ _ in
             self.delegate?.changeStyle(int: 3,
                                        color: UIColor.yellow)
+            self.colorButton.tintColor = .yellow
         }
         let white = UIAction(title: "White",
-                             image: UIImage(systemName: "circle.fill")){ _ in
+                             image: UIImage(systemName: "circle.fill")?.withTintColor(.white, renderingMode: .alwaysOriginal)){ _ in
             self.delegate?.changeStyle(int: 3,
                                        color: UIColor.white)
+            self.colorButton.tintColor = .white
         }
         let green = UIAction(title: "Green",
-                             image: UIImage(systemName: "circle.fill")){ _ in
+                             image: UIImage(systemName: "circle.fill")?.withTintColor(.green, renderingMode: .alwaysOriginal)){ _ in
             self.delegate?.changeStyle(int: 3,
                                        color: UIColor.green)
+            self.colorButton.tintColor = .green
         }
         let brown = UIAction(title: "Brown",
-                             image: UIImage(systemName: "circle.fill")){ _ in
+                             image: UIImage(systemName: "circle.fill")?.withTintColor(.brown, renderingMode: .alwaysOriginal)){ _ in
             self.delegate?.changeStyle(int: 3,
                                        color: UIColor.brown)
+            self.colorButton.tintColor = .brown
         }
         let menu = UIMenu(image: UIImage(systemName: "circle.fill"),
                           options: .displayInline,
