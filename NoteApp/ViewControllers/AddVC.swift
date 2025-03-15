@@ -17,6 +17,7 @@ class AddVC: UIViewController, ChangeStyle, UITextViewDelegate {
     var documentId: String = ""
     var userId: String = ""
     var type: String = ""
+    
     //MARK: UI Elements
     private let backButton: UIButton = {
         let button = UIButton()
@@ -62,6 +63,21 @@ class AddVC: UIViewController, ChangeStyle, UITextViewDelegate {
                          for: .touchUpInside)
         button.layer.cornerRadius = 25
         button.isEnabled = false
+        return button
+    }()
+    
+    private let deleteButton: UIButton = {
+        let button = UIButton()
+        button.setImage(UIImage(systemName: "trash.fill"),
+                        for: .normal)
+        button.tintColor = .white
+        button.backgroundColor = UIColor(named: "DarkGray3")
+        button.addTarget(self,
+                         action: #selector(saveNote(_:)),
+                         for: .touchUpInside)
+        button.layer.cornerRadius = 25
+        button.isHidden = true
+        button.addTarget(self, action: #selector(deleteAction), for: .touchUpInside)
         return button
     }()
     
@@ -169,10 +185,14 @@ class AddVC: UIViewController, ChangeStyle, UITextViewDelegate {
         
         view.addSubview(typeButton)
         
-        
         view.addSubview(moreButton)
         
         view.addSubview(doneButton)
+        
+        if documentId != "" {
+            deleteButton.isHidden = false
+        }
+        view.addSubview(deleteButton)
         
         view.addSubview(scrollView)
         
@@ -215,8 +235,21 @@ class AddVC: UIViewController, ChangeStyle, UITextViewDelegate {
             make.height.width.equalTo(50)
         }
         doneButton.snp.makeConstraints { make in
-            make.top.trailing.equalTo(view.safeAreaLayoutGuide).inset(10)
+            make.top.equalTo(view.safeAreaLayoutGuide).inset(10)
+            make.trailing.equalTo(deleteButton).inset(55)
             make.height.width.equalTo(50)
+        }
+        deleteButton.snp.makeConstraints { make in
+            make.height.width.equalTo(50)
+            make.top.trailing.equalTo(view.safeAreaLayoutGuide).inset(10)
+        }
+        if documentId == "" {
+            deleteButton.snp.updateConstraints { make in
+                make.height.width.equalTo(0)
+            }
+            doneButton.snp.updateConstraints{ make in
+                make.trailing.equalTo(deleteButton)
+            }
         }
         scrollView.snp.makeConstraints { make in
             make.leading.trailing.bottom.equalTo(view.safeAreaLayoutGuide).inset(10)
@@ -389,6 +422,27 @@ class AddVC: UIViewController, ChangeStyle, UITextViewDelegate {
     @objc func keyboardWillHide(_ notification: Notification){
         vieww.snp.updateConstraints { make in
             make.bottom.equalTo(view)
+        }
+    }
+    
+    @objc func deleteAction(){
+        print(userId, documentId)
+        db.collection("Users").document(userId).collection("Notes").document(documentId).delete { [weak self] error in
+            if error == nil {
+                DispatchQueue.main.async {
+                    let router = UserNotesRouter.start()
+                    if let launchScreen = router.entry {
+                        launchScreen.isModalInPresentation = true
+                        launchScreen.modalPresentationStyle = .fullScreen
+                        self?.present(launchScreen,
+                                     animated: true)
+                    }
+                }
+            }else {
+                let alert = UIAlertController(title: "Error", message: error?.localizedDescription, preferredStyle: .alert)
+                alert.addAction(UIAlertAction(title: "OK", style: .cancel))
+                self?.present(alert, animated: true)
+            }
         }
     }
     
